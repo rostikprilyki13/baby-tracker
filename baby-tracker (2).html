@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#fdf8f0" />
+<title>BabyTrack</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --bg:#fdf8f0;--card:#fff;
+    --accent-pink:#f4a7b9;--accent-blue:#a8d8ea;--accent-mint:#b5e8d5;
+    --accent-peach:#ffcba4;--accent-lavender:#c9b8e8;--accent-indigo:#9fa8da;
+    --text-primary:#4a3f5f;--text-secondary:#8a7fa0;--border:#ede8f0;
+    --shadow:0 2px 24px rgba(74,63,95,.06);--shadow-hover:0 6px 32px rgba(74,63,95,.12);
+  }
+  html,body{height:100%;overflow:hidden;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text-primary);touch-action:manipulation;}
+  .app-container{max-width:480px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);}
+
+  /* HEADER */
+  .app-header{padding:20px 20px 14px;position:relative;overflow:hidden;box-shadow:var(--shadow);flex-shrink:0;}
+  .hdr-blob{position:absolute;border-radius:50%;pointer-events:none;}
+  .header-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;}
+  .header-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--text-primary);}
+  .header-title span{color:var(--accent-pink);}
+  .header-actions{display:flex;gap:8px;}
+  .icon-btn{background:rgba(255,255,255,.55);border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text-secondary);}
+  .icon-btn:active{background:rgba(255,255,255,.9);}
+
+  /* CHILD SWITCHER */
+  .child-switcher{display:flex;gap:8px;align-items:center;margin-top:12px;position:relative;z-index:1;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .child-switcher::-webkit-scrollbar{height:0;}
+  .child-chip{display:flex;align-items:center;gap:6px;padding:7px 14px 7px 10px;border-radius:22px;border:2px solid transparent;background:rgba(255,255,255,.5);cursor:pointer;white-space:nowrap;flex-shrink:0;font-size:13px;font-weight:700;color:var(--text-primary);}
+  .child-chip.active{background:#fff;box-shadow:0 2px 12px rgba(74,63,95,.12);}
+  .chip-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;}
+  .chip-age{font-size:10px;color:var(--text-secondary);font-weight:600;margin-left:2px;}
+  .add-child-chip{width:38px;height:38px;border-radius:50%;border:2px dashed var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary);flex-shrink:0;}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;padding:10px 16px;background:var(--bg);flex-shrink:0;}
+  .tab-btn{flex:1;padding:8px 2px;border:none;background:transparent;border-radius:12px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--text-secondary);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .tab-btn.active{background:var(--card);color:var(--text-primary);box-shadow:var(--shadow);}
+  .tab-icon{font-size:16px;}
+
+  /* CONTENT */
+  .content{flex:1;padding:16px 20px 30px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+  /* CARDS */
+  .card{background:var(--card);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--text-primary);}
+  .card-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+  .badge-pink{background:#fce4ec;color:#c2185b;}
+  .badge-blue{background:#e1f5fe;color:#0277bd;}
+  .badge-mint{background:#e8f5e9;color:#2e7d32;}
+  .badge-peach{background:#fff3e0;color:#e65100;}
+  .badge-indigo{background:#e8eaf6;color:#3949ab;}
+
+  /* FORM */
+  .input-wrap{flex:1;position:relative;}
+  .input-label{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block;}
+  .input-field{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text-primary);background:#faf8fc;outline:none;}
+  .input-field:focus{border-color:var(--accent-lavender);}
+  .input-field::placeholder{color:#c4b8d9;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent-pink),var(--accent-lavender));border:none;color:#fff;width:38px;height:38px;border-radius:14px;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(244,167,185,.4);display:flex;align-items:center;justify-content:center;}
+
+  /* STATS */
+  .stats-row{display:flex;gap:8px;margin-bottom:16px;}
+  .stat-card{flex:1;background:#faf8fc;border-radius:16px;padding:12px 8px;text-align:center;}
+  .stat-value{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--text-primary);}
+  .stat-value .unit{font-size:12px;}
+  .stat-label{font-size:10px;color:var(--text-secondary);font-weight:600;margin-top:2px;}
+  .stat-change{font-size:10px;font-weight:700;margin-top:3px;}
+  .change-up{color:#43a047;}.change-down{color:#e53935;}.change-neutral{color:var(--text-secondary);}
+
+  /* ENTRIES */
+  .entry-list{max-height:240px;overflow-y:auto;}
+  .entry-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .entry-item:last-child{border-bottom:none;}
+  .entry-left{display:flex;align-items:center;gap:10px;}
+  .entry-dot{width:10px;height:10px;border-radius:50%;}
+  .dot-pink{background:var(--accent-pink);}.dot-blue{background:var(--accent-blue);}.dot-mint{background:var(--accent-mint);}
+  .dot-indigo{background:var(--accent-indigo);}.dot-indigo-dark{background:#5c6bc0;}
+  .entry-info{line-height:1.3;}
+  .entry-val{font-size:14px;font-weight:700;color:var(--text-primary);}
+  .entry-time{font-size:11px;color:var(--text-secondary);}
+  .entry-delete{background:none;border:none;color:#ccc;cursor:pointer;font-size:15px;padding:6px;}
+
+  /* CHIPS */
+  .chips-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .feed-chip{background:linear-gradient(135deg,#fff0f5,#fce4ec);padding:7px 12px;border-radius:20px;font-size:13px;font-weight:600;color:var(--text-primary);}
+  .feed-chip span{color:var(--accent-pink);font-weight:700;}
+  .sleep-chip{background:linear-gradient(135deg,#eef0ff,#e8eaf6);padding:7px 12px;border-radius:20px;font-size:13px;font-weight:600;color:var(--text-primary);}
+  .sleep-chip span{color:var(--accent-indigo);font-weight:700;}
+
+  /* QUICK-ADD BTNS */
+  .quick-row{display:flex;gap:8px;margin-bottom:16px;}
+  .quick-btn{flex:1;padding:11px 4px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .qb-growth{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:#1565c0;}
+  .qb-feed{background:linear-gradient(135deg,#fce4ec,#f8bbd0);color:#c2185b;}
+  .qb-sleep{background:linear-gradient(135deg,#e8eaf6,#c5cae9);color:#3949ab;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(74,63,95,.35);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:flex-end;justify-content:center;}
+  .modal{background:var(--card);width:100%;max-width:480px;border-radius:28px 28px 0 0;padding:28px 24px 40px;animation:slideUp .3s ease;}
+  @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+  .modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin-bottom:20px;color:var(--text-primary);}
+  .modal-row{display:flex;gap:10px;}
+  .btn-save{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent-pink),var(--accent-lavender));border:none;border-radius:16px;color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px;box-shadow:0 4px 14px rgba(244,167,185,.4);}
+  .btn-cancel{width:100%;padding:12px;background:#faf8fc;border:2px solid var(--border);border-radius:16px;color:var(--text-secondary);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
+  .btn-danger{width:100%;padding:12px;background:#fff0f0;border:2px solid #ffcdd2;border-radius:16px;color:#e53935;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+
+  /* TYPE TOGGLE */
+  .type-toggle{display:flex;gap:8px;margin-bottom:16px;}
+  .type-btn{flex:1;padding:11px 6px;border:2px solid var(--border);border-radius:14px;background:#faf8fc;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text-primary);text-align:center;}
+  .type-btn .t-icon{font-size:22px;margin-bottom:2px;}
+
+  /* COLOR / EMOJI PICKERS */
+  .color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .color-swatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;}
+  .color-swatch.active{border-color:var(--text-primary);transform:scale(1.1);}
+  .emoji-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .emoji-btn{width:36px;height:36px;border-radius:10px;border:2px solid var(--border);background:#faf8fc;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
+  .emoji-btn.active{border-color:var(--accent-lavender);background:#ede7f6;}
+
+  /* REPORT */
+  .report-header{text-align:center;padding:10px 0 18px;}
+  .report-header h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--text-primary);}
+  .report-header p{font-size:13px;color:var(--text-secondary);margin-top:4px;}
+  .report-toggle{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
+  .report-toggle-btn{padding:8px 18px;border:2px solid var(--border);background:var(--card);border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text-secondary);cursor:pointer;}
+  .report-toggle-btn.active{background:linear-gradient(135deg,var(--accent-pink),var(--accent-lavender));border-color:transparent;color:#fff;}
+  .report-section{margin-bottom:20px;}
+  .report-section-title{font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+  .report-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f0f6;font-size:14px;}
+  .report-row:last-child{border-bottom:none;}
+  .report-row-label{color:var(--text-secondary);}
+  .report-row-value{font-weight:700;color:var(--text-primary);}
+  .report-highlight{border-radius:16px;padding:16px;text-align:center;margin:16px 0;background:linear-gradient(135deg,#fce4ec,#ede7f6);}
+  .report-highlight-val{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text-primary);}
+  .report-highlight-label{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+
+  /* SETUP */
+  .setup-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;background:linear-gradient(180deg,#fce4ec 0%,#ede7f6 50%,#fdf8f0 100%);}
+  .setup-icon{font-size:64px;margin-bottom:16px;}
+  .setup-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--text-primary);text-align:center;margin-bottom:6px;}
+  .setup-sub{font-size:14px;color:var(--text-secondary);text-align:center;margin-bottom:32px;}
+  .setup-form{background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 2px 24px rgba(74,63,95,.08);}
+
+  /* CHILDREN LIST */
+  .children-list-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .children-list-item:last-child{border-bottom:none;}
+  .child-list-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0;}
+  .child-list-info{flex:1;}
+  .child-list-name{font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:6px;}
+  .child-list-age{font-size:12px;color:var(--text-secondary);}
+  .child-list-actions{display:flex;gap:6px;}
+  .child-action-btn{background:#faf8fc;border:1px solid var(--border);border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .active-badge{font-size:10px;background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:10px;font-weight:700;}
+
+  /* GROUP HEADER */
+  .group-head{font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* EMPTY */
+  .empty-state{text-align:center;padding:32px 20px;color:var(--text-secondary);}
+  .empty-icon{font-size:40px;margin-bottom:10px;}
+  .empty-text{font-size:14px;}
+
+  /* DURATION PREVIEW */
+  .dur-preview{margin-top:12px;text-align:center;padding:10px 0;border-radius:12px;font-size:13px;color:var(--text-secondary);}
+  .dur-preview strong{font-size:15px;font-weight:700;}
+
+  /* CHART SVG */
+  .chart-wrap{width:100%;height:180px;margin:8px 0;}
+  .chart-wrap svg{width:100%;height:100%;}
+  svg text{font-family:'Nunito',sans-serif;}
+
+  /* LOADING */
+  .loader{display:flex;align-items:center;justify-content:center;height:100vh;font-size:40px;}
+</style>
+</head>
+<body>
+<div id="root" class="loader">🍼</div>
+<div id="debug" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-family:monospace;font-size:10px;padding:8px;max-height:120px;overflow-y:auto;z-index:999;opacity:0.9"></div>
+
+<script>
+// ─── DEBUG ────────────────────────────────────────────────────────────────
+const debugEl=document.getElementById("debug");
+let debugLogs=[];
+const origLog=console.log,origErr=console.error;
+function debugLog(msg){
+  const fullMsg=new Date().toLocaleTimeString()+" "+msg;
+  debugLogs.push(fullMsg);
+  if(debugLogs.length>20)debugLogs.shift();
+  if(debugEl){
+    debugEl.style.display="block";
+    debugEl.textContent=debugLogs.join("\n");
+  }
+  origLog(fullMsg);
+}
+// Override console for iOS
+console.log=function(...args){debugLog(args.join(" "));};
+console.error=function(...args){debugLog("ERROR: "+args.join(" "));origErr.apply(console,args);};
+
+debugLog("BabyTrack v1.0 starting...");
+debugLog("localStorage available: "+(typeof localStorage!=="undefined"));
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────
+const CHILD_COLORS=["#f4a7b9","#a8d8ea","#b5e8d5","#ffcba4","#c9b8e8","#a5d6a7","#ef9a9a","#90caf9","#fff176","#ce93d8"];
+const CHILD_EMOJIS=["👶","👧","👦","🧒","👼","🌸","⭐","🐻","🦋","🌈"];
+
+// ─── UTILS ────────────────────────────────────────────────────────────────
+function formatDate(d){return new Date(d).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});}
+function formatDateTime(d){const dt=new Date(d);return dt.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})+" "+dt.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});}
+function fmtTime(d){return new Date(d).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});}
+function getWeekStart(date){const d=new Date(date||new Date());const day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1));d.setHours(0,0,0,0);return d;}
+function getMonthStart(date){const d=date||new Date();return new Date(d.getFullYear(),d.getMonth(),1);}
+function calcAge(dob){
+  if(!dob)return"";
+  const now=new Date(),birth=new Date(dob);
+  let months=(now.getFullYear()-birth.getFullYear())*12+(now.getMonth()-birth.getMonth());
+  if(now.getDate()<birth.getDate())months--;
+  if(months<1){const days=Math.floor((now-birth)/86400000);return days+" д.";}
+  if(months<12)return months+" мес.";
+  const y=Math.floor(months/12),m=months%12;
+  return m>0?y+" г. "+m+" мес.":y+" г.";
+}
+function sleepMinutes(start,end){if(!start||!end)return 0;return Math.max(0,Math.round((new Date(end)-new Date(start))/60000));}
+function fmtDuration(mins){if(mins<60)return mins+" мин";const h=Math.floor(mins/60),m=mins%60;return m>0?h+" ч "+m+" мин":h+" ч";}
+function pad(n){return String(n).padStart(2,"0");}
+function nowLocal(){const n=new Date();return n.getFullYear()+"-"+pad(n.getMonth()+1)+"-"+pad(n.getDate())+"T"+pad(n.getHours())+":"+pad(n.getMinutes());}
+
+// ─── STORAGE (localStorage) ───────────────────────────────────────────────
+const SK={CHILDREN:"bt:children",ACTIVE:"bt:active"};
+function growthKey(id){return"bt:growth:"+id;}
+function feedingKey(id){return"bt:feeding:"+id;}
+function sleepKey(id){return"bt:sleep:"+id;}
+function load(key,fb){
+  try{
+    const v=localStorage.getItem(key);
+    if(!v)return fb;
+    return JSON.parse(v);
+  }catch(e){
+    console.error("Load error:",key,e);
+    return fb;
+  }
+}
+function save(key,val){
+  try{
+    localStorage.setItem(key,JSON.stringify(val));
+  }catch(e){
+    console.error("Save error:",key,e);
+  }
+}
+
+// ─── APP STATE ────────────────────────────────────────────────────────────
+let state={children:[],activeId:null,growthMap:{},feedingMap:{},sleepMap:{},tab:"dashboard",modal:null,editingChild:null};
+
+function initApp(){
+  try{
+    debugLog("Loading children...");
+    state.children=load(SK.CHILDREN,[]);
+    debugLog("Children loaded: "+state.children.length);
+    state.activeId=load(SK.ACTIVE,null)||(state.children.length?state.children[0].id:null);
+    debugLog("Active ID: "+state.activeId);
+    state.growthMap={};state.feedingMap={};state.sleepMap={};
+    state.children.forEach(c=>{
+      state.growthMap[c.id]=load(growthKey(c.id),[]);
+      state.feedingMap[c.id]=load(feedingKey(c.id),[]);
+      state.sleepMap[c.id]=load(sleepKey(c.id),[]);
+    });
+    debugLog("Data loaded, rendering...");
+    render();
+    debugLog("Render complete");
+  }catch(e){
+    debugLog("initApp ERROR: "+e.message);
+    console.error("initApp error:",e);
+    throw e;
+  }
+}
+
+// ─── CRUD ─────────────────────────────────────────────────────────────────
+function addChild(data){
+  try{
+    const id=Date.now().toString();
+    state.children.push({id,...data});
+    save(SK.CHILDREN,state.children);
+    state.growthMap[id]=[];state.feedingMap[id]=[];state.sleepMap[id]=[];
+    state.activeId=id;save(SK.ACTIVE,id);
+    state.modal=null;render();
+  }catch(e){console.error("addChild error:",e);}
+}
+function updateChild(data){
+  const idx=state.children.findIndex(c=>c.id===data.id);
+  if(idx>=0)state.children[idx]={...state.children[idx],...data};
+  save(SK.CHILDREN,state.children);
+  state.modal=null;state.editingChild=null;render();
+}
+function deleteChild(id){
+  state.children=state.children.filter(c=>c.id!==id);
+  save(SK.CHILDREN,state.children);
+  delete state.growthMap[id];delete state.feedingMap[id];delete state.sleepMap[id];
+  try{localStorage.removeItem(growthKey(id));localStorage.removeItem(feedingKey(id));localStorage.removeItem(sleepKey(id));}catch{}
+  if(state.activeId===id)state.activeId=state.children.length?state.children[0].id:null;
+  save(SK.ACTIVE,state.activeId);
+  state.modal=null;state.editingChild=null;render();
+}
+function addGrowth(entry){
+  const id=state.activeId;
+  state.growthMap[id].push({...entry,id:Date.now(),date:new Date().toISOString()});
+  save(growthKey(id),state.growthMap[id]);state.modal=null;render();
+}
+function deleteGrowth(eid){
+  const id=state.activeId;
+  state.growthMap[id]=state.growthMap[id].filter(e=>e.id!==eid);
+  save(growthKey(id),state.growthMap[id]);render();
+}
+function addFeeding(entry){
+  const id=state.activeId;
+  state.feedingMap[id].push({...entry,id:Date.now(),date:new Date().toISOString()});
+  save(feedingKey(id),state.feedingMap[id]);state.modal=null;render();
+}
+function deleteFeeding(eid){
+  const id=state.activeId;
+  state.feedingMap[id]=state.feedingMap[id].filter(e=>e.id!==eid);
+  save(feedingKey(id),state.feedingMap[id]);render();
+}
+function addSleep(entry){
+  const id=state.activeId;
+  state.sleepMap[id].push({...entry,id:Date.now()});
+  save(sleepKey(id),state.sleepMap[id]);state.modal=null;render();
+}
+function deleteSleep(eid){
+  const id=state.activeId;
+  state.sleepMap[id]=state.sleepMap[id].filter(e=>e.id!==eid);
+  save(sleepKey(id),state.sleepMap[id]);render();
+}
+
+// ─── SVG CHART HELPERS ────────────────────────────────────────────────────
+function lineChart(data,keys,colors,width,height,unitSuffix=""){
+  // data: [{label, ...keys}]
+  if(!data.length)return"";
+  const pad={top:24,right:12,bottom:28,left:34};
+  const w=width-pad.left-pad.right, h=height-pad.top-pad.bottom;
+  let allVals=[];
+  keys.forEach(k=>{data.forEach(d=>{if(d[k]!=null)allVals.push(d[k]);});});
+  const minV=Math.max(0,Math.min(...allVals)-1), maxV=Math.max(...allVals)+1;
+  const xStep=data.length>1?w/(data.length-1):w;
+  const yScale=v=>pad.top+h-(((v-minV)/(maxV-minV))*h);
+  let svg=`<svg viewBox="0 0 ${width} ${height}">`;
+  // grid
+  for(let i=0;i<=4;i++){
+    const y=pad.top+(h/4)*i;
+    svg+=`<line x1="${pad.left}" y1="${y}" x2="${width-pad.right}" y2="${y}" stroke="#f0ecf5" stroke-dasharray="3 3"/>`;
+  }
+  // y labels
+  for(let i=0;i<=4;i++){
+    const val=(maxV-(i/4)*(maxV-minV)).toFixed(1);
+    svg+=`<text x="${pad.left-6}" y="${pad.top+(h/4)*i+4}" text-anchor="end" font-size="10" fill="#8a7fa0">${val}</text>`;
+  }
+  // x labels
+  data.forEach((d,i)=>{
+    svg+=`<text x="${pad.left+xStep*i}" y="${height-6}" text-anchor="middle" font-size="10" fill="#8a7fa0">${d.label}</text>`;
+  });
+  // lines
+  keys.forEach((k,ki)=>{
+    let pts=[];
+    data.forEach((d,i)=>{if(d[k]!=null)pts.push({x:pad.left+xStep*i,y:yScale(d[k]),v:d[k]});});
+    if(pts.length<2)return;
+    // smooth curve using quadratic
+    let path=`M${pts[0].x},${pts[0].y}`;
+    for(let i=1;i<pts.length;i++){
+      const mx=(pts[i-1].x+pts[i].x)/2;
+      path+=` Q${pts[i-1].x},${pts[i-1].y} ${mx},${(pts[i-1].y+pts[i].y)/2}`;
+    }
+    path+=` Q${pts[pts.length-1].x},${pts[pts.length-1].y} ${pts[pts.length-1].x},${pts[pts.length-1].y}`;
+    svg+=`<path d="${path}" fill="none" stroke="${colors[ki]}" stroke-width="2.5" stroke-linecap="round"/>`;
+    pts.forEach(p=>{svg+=`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${colors[ki]}"/>`});
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+function barChart(data,keys,colors,names,width,height,unitSuffix=""){
+  if(!data.length)return"";
+  const pad={top:20,right:12,bottom:28,left:30};
+  const w=width-pad.left-pad.right, h=height-pad.top-pad.bottom;
+  // stacked max
+  let maxStack=0;
+  data.forEach(d=>{let s=0;keys.forEach(k=>{s+=(d[k]||0);});if(s>maxStack)maxStack=s;});
+  if(maxStack===0)maxStack=1;
+  const barW=Math.min(28, w/data.length*0.6);
+  const gap=w/data.length;
+  let svg=`<svg viewBox="0 0 ${width} ${height}">`;
+  // grid
+  for(let i=0;i<=3;i++){
+    const y=pad.top+(h/3)*i;
+    svg+=`<line x1="${pad.left}" y1="${y}" x2="${width-pad.right}" y2="${y}" stroke="#f0ecf5" stroke-dasharray="3 3"/>`;
+    const val=(maxStack-(i/3)*maxStack).toFixed(1);
+    svg+=`<text x="${pad.left-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#8a7fa0">${val}${unitSuffix}</text>`;
+  }
+  // bars
+  data.forEach((d,i)=>{
+    const cx=pad.left+gap*i+gap/2;
+    let bottom=pad.top+h;
+    keys.forEach((k,ki)=>{
+      const val=d[k]||0;
+      const bh=(val/maxStack)*h;
+      const y=bottom-bh;
+      const r=(ki===keys.length-1)?4:0;
+      svg+=`<rect x="${cx-barW/2}" y="${y}" width="${barW}" height="${bh}" rx="${r}" ry="${r}" fill="${colors[ki]}"/>`;
+      bottom=y;
+    });
+    svg+=`<text x="${cx}" y="${height-6}" text-anchor="middle" font-size="10" fill="#8a7fa0">${d.label}</text>`;
+  });
+  // legend
+  let lx=pad.left;
+  keys.forEach((k,i)=>{
+    svg+=`<circle cx="${lx+6}" cy="${pad.top-6}" r="4" fill="${colors[i]}"/>`;
+    svg+=`<text x="${lx+14}" y="${pad.top-2}" font-size="10" fill="#8a7fa0">${names[i]}</text>`;
+    lx+=14+names[i].length*6.5+12;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+// ─── RENDER ENGINE ────────────────────────────────────────────────────────
+function render(){
+  try{
+    const root=document.getElementById("root");
+    if(!root){throw new Error("Root element not found");}
+    
+    if(!state.children.length){
+      debugLog("No children, showing setup");
+      root.innerHTML=renderSetup();
+      return;
+    }
+    
+    debugLog("Rendering main app, tab: "+state.tab);
+    const active=state.children.find(c=>c.id===state.activeId)||state.children[0];
+    const gd=state.growthMap[active.id]||[];
+    const fd=state.feedingMap[active.id]||[];
+    const sd=state.sleepMap[active.id]||[];
+
+    let tabContent="";
+    switch(state.tab){
+      case"dashboard":tabContent=renderDashboard(active,gd,fd,sd);break;
+      case"growth":tabContent=renderGrowth(gd);break;
+      case"feeding":tabContent=renderFeeding(fd);break;
+      case"sleep":tabContent=renderSleep(sd);break;
+      case"reports":tabContent=renderReports(gd,fd,sd);break;
+      default:tabContent="<div>Unknown tab</div>";
+    }
+
+    root.innerHTML=`
+  <div class="app-container">
+    <div class="app-header" style="background:linear-gradient(135deg,${active.color}33 0%,#e8eaf6 100%)">
+      <div class="hdr-blob" style="top:-40px;right:-40px;width:140px;height:140px;background:${active.color};opacity:.18"></div>
+      <div class="hdr-blob" style="bottom:-24px;left:30px;width:90px;height:90px;background:${active.color};opacity:.22"></div>
+      <div class="header-top">
+        <div class="header-title">Baby<span>Track</span></div>
+        <div class="header-actions">
+          <button class="icon-btn" onclick="openModal('childList')">👨‍👧</button>
+          <button class="icon-btn" onclick="openEditModal()">⚙️</button>
+        </div>
+      </div>
+      <div class="child-switcher">
+        ${state.children.map(c=>`<div class="child-chip ${c.id===active.id?"active":""}" onclick="switchChild('${c.id}')">
+          <div class="chip-avatar" style="background:${c.color}">${c.emoji}</div>
+          <div><div style="line-height:1.2">${c.name}</div><div class="chip-age">${calcAge(c.dob)}</div></div>
+        </div>`).join("")}
+        <button class="add-child-chip" onclick="openModal('addChild')">+</button>
+      </div>
+    </div>
+    <div class="tabs">
+      ${[["dashboard","🏠","Главная"],["growth","📏","Рост"],["feeding","🍼","Еда"],["sleep","🌙","Сон"],["reports","📊","Отчёты"]].map(([k,ic,lb])=>
+        `<button class="tab-btn ${state.tab===k?"active":""}" onclick="switchTab('${k}')"><span class="tab-icon">${ic}</span>${lb}</button>`
+      ).join("")}
+    </div>
+    <div class="content">${tabContent}</div>
+  </div>
+  ${renderModal()}`;
+    debugLog("Render HTML updated");
+  }catch(e){
+    debugLog("Render ERROR: "+e.message);
+    console.error("Render error:",e);
+    const root=document.getElementById("root");
+    if(root){
+      root.innerHTML=`<div style="padding:40px 20px;text-align:center;color:#e53935">
+        <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">Ошибка отрисовки</div>
+        <div style="font-size:14px;color:#666;margin-bottom:8px">${e.message||"Неизвестная ошибка"}</div>
+        <div style="font-size:12px;color:#999;margin-bottom:20px">${e.stack?e.stack.split('\\n')[0]:""}</div>
+        <button onclick="location.reload()" style="padding:12px 24px;background:#0277bd;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;margin-right:8px">Перезапустить</button>
+        <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#e53935;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700">Очистить данные</button>
+      </div>`;
+    }
+  }
+}
+
+// ─── SETUP SCREEN ─────────────────────────────────────────────────────────
+function renderSetup(){
+  return`<div class="setup-screen">
+    <div class="setup-icon">🍼</div>
+    <div class="setup-title">Добро пожаловать!</div>
+    <div class="setup-sub">Добавьте первого малыша, чтобы начать</div>
+    <div class="setup-form">
+      <div class="input-wrap" style="margin-bottom:14px"><label class="input-label">Имя малыша</label><input class="input-field" id="setup-name" placeholder="Например, Мило"/></div>
+      <div class="input-wrap" style="margin-bottom:14px"><label class="input-label">Дата рождения</label><input class="input-field" type="date" id="setup-dob"/></div>
+      <div style="margin-bottom:14px"><label class="input-label">Аватар</label><div class="emoji-row">${CHILD_EMOJIS.map(e=>`<button class="emoji-btn" onclick="toggleSetupEmoji('${e}')">${e}</button>`).join("")}</div></div>
+      <div><label class="input-label">Цвет</label><div class="color-row">${CHILD_COLORS.map(c=>`<div class="color-swatch" style="background:${c}" onclick="toggleSetupColor('${c}')"></div>`).join("")}</div></div>
+      <button class="btn-save" onclick="submitSetup()">Добавить ребёнка</button>
+    </div>
+  </div>`;
+}
+let setupEmoji=CHILD_EMOJIS[0], setupColor=CHILD_COLORS[0];
+function toggleSetupEmoji(e){setupEmoji=e;document.querySelectorAll(".setup-form .emoji-btn").forEach(b=>{b.classList.toggle("active",b.textContent===e);});}
+function toggleSetupColor(c){setupColor=c;document.querySelectorAll(".setup-form .color-swatch").forEach(s=>{s.classList.toggle("active",s.style.background===c);});}
+function submitSetup(){
+  const name=document.getElementById("setup-name").value.trim();
+  if(!name)return;
+  addChild({name,dob:document.getElementById("setup-dob").value,color:setupColor,emoji:setupEmoji});
+  setupEmoji=CHILD_EMOJIS[0];setupColor=CHILD_COLORS[0];
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────
+function renderDashboard(active,gd,fd,sd){
+  const last=gd.length?gd[gd.length-1]:null;
+  const prev=gd.length>1?gd[gd.length-2]:null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const isToday=d=>{const x=new Date(d);x.setHours(0,0,0,0);return+x===+today;};
+  const todayFeed=fd.filter(f=>isToday(f.date));
+  const todaySleep=sd.filter(s=>isToday(s.start)||isToday(s.end));
+  const mlToday=todayFeed.filter(f=>f.type==="bottle").reduce((s,f)=>s+f.amount,0);
+  const minToday=todayFeed.filter(f=>f.type==="breast").reduce((s,f)=>s+f.amount,0);
+  const gToday=todayFeed.filter(f=>f.type==="food").reduce((s,f)=>s+f.amount,0);
+  const sleepMinsToday=todaySleep.reduce((s,e)=>s+sleepMinutes(e.start,e.end),0);
+
+  let hChange="",wChange="";
+  if(prev&&last&&prev.height&&last.height){const d=last.height-prev.height;hChange=`<div class="stat-change ${d>=0?"change-up":"change-down"}">${d>=0?"↑":"↓"} ${Math.abs(d)} см</div>`;}
+  if(prev&&last&&prev.weight&&last.weight){const d=last.weight-prev.weight;wChange=`<div class="stat-change ${d>=0?"change-up":"change-down"}">${d>=0?"↑":"↓"} ${Math.abs(d.toFixed(2))} кг</div>`;}
+
+  let todayCard="";
+  if(todayFeed.length>0||todaySleep.length>0){
+    const total=todayFeed.length+todaySleep.length;
+    todayCard=`<div class="card">
+      <div class="card-header"><div class="card-title">Сегодня</div><span class="card-badge badge-pink">${total} запис${total!==1?"ей":"ь"}</span></div>
+      <div class="chips-row">
+        ${minToday>0?`<div class="feed-chip">🤱 <span>${minToday}</span> мин</div>`:""}
+        ${mlToday>0?`<div class="feed-chip">🍼 <span>${mlToday}</span> мл</div>`:""}
+        ${gToday>0?`<div class="feed-chip">🥣 <span>${gToday}</span> г</div>`:""}
+        ${sleepMinsToday>0?`<div class="sleep-chip">🌙 <span>${fmtDuration(sleepMinsToday)}</span></div>`:""}
+      </div>
+    </div>`;
+  }
+
+  let chartCard="";
+  if(gd.length>1){
+    const W=440,H=180;
+    const chartData=gd.map(d=>({label:formatDate(d.date),height:d.height}));
+    chartCard=`<div class="card">
+      <div class="card-header"><div class="card-title">Динамика роста</div><span class="card-badge badge-blue">${gd.length} изм.</span></div>
+      <div class="chart-wrap">${lineChart(chartData,["height"],["#a8d8ea"],W,H)}</div>
+    </div>`;
+  }
+
+  let emptyState="";
+  if(gd.length===0&&fd.length===0&&sd.length===0){
+    emptyState=`<div class="empty-state"><div class="empty-icon">👶</div><div class="empty-text">Добавьте первое измерение, приём пищи или запись сна!</div></div>`;
+  }
+
+  return`
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value">${last?.height??"—"}<span class="unit">см</span></div><div class="stat-label">Рост</div>${hChange}</div>
+      <div class="stat-card"><div class="stat-value">${last?.weight??"—"}<span class="unit">кг</span></div><div class="stat-label">Вес</div>${wChange}</div>
+      <div class="stat-card"><div class="stat-value">${todayFeed.length}</div><div class="stat-label">Приёмов</div><div class="stat-change change-neutral">сегодня</div></div>
+      <div class="stat-card"><div class="stat-value" style="font-size:16px">${sleepMinsToday>0?fmtDuration(sleepMinsToday):"—"}</div><div class="stat-label">Сон</div><div class="stat-change change-neutral">сегодня</div></div>
+    </div>
+    <div class="quick-row">
+      <button class="quick-btn qb-growth" onclick="openModal('growth')">📏 Рост</button>
+      <button class="quick-btn qb-feed" onclick="openModal('feeding')">🍼 Еда</button>
+      <button class="quick-btn qb-sleep" onclick="openModal('sleep')">🌙 Сон</button>
+    </div>
+    ${todayCard}
+    ${chartCard}
+    ${emptyState}`;
+}
+
+// ─── GROWTH TAB ───────────────────────────────────────────────────────────
+function renderGrowth(gd){
+  let charts="";
+  if(gd.length>1){
+    const W=440,H=180;
+    const hData=gd.map(d=>({label:formatDate(d.date),height:d.height}));
+    const wData=gd.map(d=>({label:formatDate(d.date),weight:d.weight}));
+    charts=`
+      <div class="card"><div class="card-header"><div class="card-title">Рост</div><span class="card-badge badge-blue">см</span></div>
+        <div class="chart-wrap">${lineChart(hData,["height"],["#a8d8ea"],W,H)}</div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Вес</div><span class="card-badge badge-mint">кг</span></div>
+        <div class="chart-wrap">${lineChart(wData,["weight"],["#b5e8d5"],W,H)}</div></div>`;
+  }
+  let list="";
+  if(gd.length===0){list=`<div class="empty-state" style="padding:24px 0"><div class="empty-icon">📏</div><div class="empty-text">Ещё нет измерений</div></div>`;}
+  else{list=`<div class="entry-list">${[...gd].reverse().map(e=>`
+    <div class="entry-item">
+      <div class="entry-left"><div class="entry-dot dot-blue"></div><div class="entry-info">
+        <div class="entry-val">${e.height?e.height+" см":""}${e.height&&e.weight?" · ":""}${e.weight?e.weight+" кг":""}</div>
+        <div class="entry-time">${formatDateTime(e.date)}</div></div></div>
+      <button class="entry-delete" onclick="deleteGrowth(${e.id})">🗑</button>
+    </div>`).join("")}</div>`;}
+  return`${charts}<div class="card"><div class="card-header"><div class="card-title">Измерения</div><button class="btn-primary" onclick="openModal('growth')">+</button></div>${list}</div>`;
+}
+
+// ─── FEEDING TAB ──────────────────────────────────────────────────────────
+function renderFeeding(fd){
+  const typeLabels={breast:"Грудь 🤱",bottle:"Бутылочка 🍼",food:"Еда 🥣"};
+  const typeUnits={breast:"мин",bottle:"мл",food:"г"};
+  const grouped={};
+  [...fd].reverse().forEach(f=>{const k=new Date(f.date).toDateString();if(!grouped[k])grouped[k]=[];grouped[k].push(f);});
+
+  let chartCard="";
+  if(fd.length>2){
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
+    const weekData=Array.from({length:7},(_,i)=>{
+      const d=new Date(weekAgo);d.setDate(d.getDate()+i);
+      const df=fd.filter(f=>new Date(f.date).toDateString()===d.toDateString());
+      return{label:d.toLocaleDateString("ru-RU",{weekday:"short"}),
+        breast:df.filter(f=>f.type==="breast").reduce((s,f)=>s+f.amount,0),
+        bottle:df.filter(f=>f.type==="bottle").reduce((s,f)=>s+f.amount,0),
+        food:df.filter(f=>f.type==="food").reduce((s,f)=>s+f.amount,0)};
+    });
+    chartCard=`<div class="card"><div class="card-header"><div class="card-title">За неделю</div><span class="card-badge badge-peach">7 дней</span></div>
+      <div class="chart-wrap">${barChart(weekData,["breast","bottle","food"],["#f4a7b9","#a8d8ea","#b5e8d5"],["Грудь","Бутыл.","Еда"],440,180)}</div></div>`;
+  }
+
+  let list="";
+  if(fd.length===0){list=`<div class="empty-state" style="padding:24px 0"><div class="empty-icon">🍼</div><div class="empty-text">Ещё нет записей питания</div></div>`;}
+  else{list=Object.entries(grouped).map(([dk,entries])=>`
+    <div style="margin-bottom:12px">
+      <div class="group-head">${new Date(dk).toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"short"})}</div>
+      ${entries.map(e=>`<div class="entry-item">
+        <div class="entry-left"><div class="entry-dot ${e.type==="breast"?"dot-pink":e.type==="bottle"?"dot-blue":"dot-mint"}"></div>
+          <div class="entry-info"><div class="entry-val">${typeLabels[e.type]} — ${e.amount} ${typeUnits[e.type]}</div><div class="entry-time">${fmtTime(e.date)}</div></div></div>
+        <button class="entry-delete" onclick="deleteFeeding(${e.id})">🗑</button></div>`).join("")}
+    </div>`).join("");}
+
+  return`${chartCard}<div class="card"><div class="card-header"><div class="card-title">Приёмы пищи</div><button class="btn-primary" onclick="openModal('feeding')">+</button></div>${list}</div>`;
+}
+
+// ─── SLEEP TAB ────────────────────────────────────────────────────────────
+function renderSleep(sd){
+  const grouped={};
+  [...sd].reverse().forEach(s=>{const k=new Date(s.start).toDateString();if(!grouped[k])grouped[k]=[];grouped[k].push(s);});
+
+  let chartCard="";
+  if(sd.length>1){
+    const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
+    const weekData=Array.from({length:7},(_,i)=>{
+      const d=new Date(weekAgo);d.setDate(d.getDate()+i);
+      const ds=sd.filter(s=>new Date(s.start).toDateString()===d.toDateString());
+      return{label:d.toLocaleDateString("ru-RU",{weekday:"short"}),
+        night:parseFloat((ds.filter(s=>s.type==="night").reduce((a,s)=>a+sleepMinutes(s.start,s.end),0)/60).toFixed(1)),
+        day:parseFloat((ds.filter(s=>s.type==="day").reduce((a,s)=>a+sleepMinutes(s.start,s.end),0)/60).toFixed(1))};
+    });
+    chartCard=`<div class="card"><div class="card-header"><div class="card-title">За неделю</div><span class="card-badge badge-indigo">7 дней</span></div>
+      <div class="chart-wrap">${barChart(weekData,["night","day"],["#5c6bc0","#ffcba4"],["Ночной","Дневной"],440,180," ч")}</div></div>`;
+  }
+
+  let list="";
+  if(sd.length===0){list=`<div class="empty-state" style="padding:24px 0"><div class="empty-icon">🌙</div><div class="empty-text">Ещё нет записей сна</div></div>`;}
+  else{list=Object.entries(grouped).map(([dk,entries])=>`
+    <div style="margin-bottom:12px">
+      <div class="group-head">${new Date(dk).toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"short"})}</div>
+      ${entries.map(e=>{const mins=sleepMinutes(e.start,e.end);return`<div class="entry-item">
+        <div class="entry-left"><div class="entry-dot ${e.type==="night"?"dot-indigo-dark":"dot-indigo"}"></div>
+          <div class="entry-info"><div class="entry-val">${e.type==="night"?"🌙 Ночной":"☀️ Дневной"} — ${fmtDuration(mins)}</div><div class="entry-time">${fmtTime(e.start)} → ${fmtTime(e.end)}</div></div></div>
+        <button class="entry-delete" onclick="deleteSleep(${e.id})">🗑</button></div>`;}).join("")}
+    </div>`).join("");}
+
+  return`${chartCard}<div class="card"><div class="card-header"><div class="card-title">Записи сна</div><button class="btn-primary" style="background:linear-gradient(135deg,#5c6bc0,#7986cb);box-shadow:0 4px 14px rgba(92,107,192,.4)" onclick="openModal('sleep')">+</button></div>${list}</div>`;
+}
+
+// ─── REPORTS TAB ──────────────────────────────────────────────────────────
+function renderReports(gd,fd,sd){
+  const period=state.reportPeriod||"week";
+  const now=new Date();
+  const periodStart=period==="week"?getWeekStart(now):getMonthStart(now);
+  const pg=gd.filter(d=>new Date(d.date)>=periodStart);
+  const pf=fd.filter(d=>new Date(d.date)>=periodStart);
+  const ps=sd.filter(d=>new Date(d.start)>=periodStart);
+
+  const prevStart=period==="week"?new Date(getWeekStart(now).getTime()-7*86400000):new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevGrowth=gd.filter(d=>new Date(d.date)>=prevStart&&new Date(d.date)<periodStart);
+  const prevFeeding=fd.filter(d=>new Date(d.date)>=prevStart&&new Date(d.date)<periodStart);
+  const prevSleep=sd.filter(d=>new Date(d.start)>=prevStart&&new Date(d.start)<periodStart);
+
+  const lastH=pg.length?pg[pg.length-1].height:null, firstH=pg.length?pg[0].height:null;
+  const lastW=pg.length?pg[pg.length-1].weight:null, firstW=pg.length?pg[0].weight:null;
+  const hDiff=firstH&&lastH?(lastH-firstH).toFixed(1):null;
+  const wDiff=firstW&&lastW?(lastW-firstW).toFixed(2):null;
+
+  const totalBreast=pf.filter(f=>f.type==="breast").reduce((s,f)=>s+f.amount,0);
+  const totalBottle=pf.filter(f=>f.type==="bottle").reduce((s,f)=>s+f.amount,0);
+  const totalFood=pf.filter(f=>f.type==="food").reduce((s,f)=>s+f.amount,0);
+  const days=period==="week"?7:new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const avgFeeds=pf.length?(pf.length/days).toFixed(1):0;
+  const prevDays=period==="week"?7:new Date(prevStart.getFullYear(),prevStart.getMonth()+1,0).getDate();
+  const prevAvgFeeds=prevFeeding.length?(prevFeeding.length/prevDays).toFixed(1):0;
+
+  const totalSleepMins=ps.reduce((a,s)=>a+sleepMinutes(s.start,s.end),0);
+  const nightMins=ps.filter(s=>s.type==="night").reduce((a,s)=>a+sleepMinutes(s.start,s.end),0);
+  const dayMins=ps.filter(s=>s.type==="day").reduce((a,s)=>a+sleepMinutes(s.start,s.end),0);
+  const avgSleepH=totalSleepMins>0?(totalSleepMins/days/60).toFixed(1):0;
+  const prevSleepMins=prevSleep.reduce((a,s)=>a+sleepMinutes(s.start,s.end),0);
+  const prevAvgSleepH=prevSleepMins>0?(prevSleepMins/prevDays/60).toFixed(1):0;
+
+  const hasData=pg.length>0||pf.length>0||ps.length>0;
+
+  let growthCard="",feedCard="",sleepCard="",compCard="";
+
+  if(pg.length>0){
+    let hHighlight="",wHighlight="";
+    if(lastH){hHighlight=`<div class="report-highlight" style="flex:1;margin:0"><div class="report-highlight-val">${lastH} см</div><div class="report-highlight-label">Текущий рост</div>${hDiff!==null&&hDiff!=="0.0"?`<div class="stat-change ${parseFloat(hDiff)>0?"change-up":"change-down"}" style="margin-top:4px">${parseFloat(hDiff)>0?"↑":"↓"} ${Math.abs(hDiff)} см</div>`:""}</div>`;}
+    if(lastW){wHighlight=`<div class="report-highlight" style="flex:1;margin:0"><div class="report-highlight-val">${lastW} кг</div><div class="report-highlight-label">Текущий вес</div>${wDiff!==null&&wDiff!=="0.00"?`<div class="stat-change ${parseFloat(wDiff)>0?"change-up":"change-down"}" style="margin-top:4px">${parseFloat(wDiff)>0?"↑":"↓"} ${Math.abs(wDiff)} кг</div>`:""}</div>`;}
+    let lineC="";
+    if(pg.length>1){
+      const chartData=pg.map(d=>({label:formatDate(d.date),height:d.height,weight:d.weight}));
+      lineC=`<div class="chart-wrap" style="height:140px">${lineChart(chartData,["height","weight"],["#a8d8ea","#b5e8d5"],440,140)}</div>`;
+    }
+    growthCard=`<div class="card"><div class="card-header"><div class="card-title">📏 Рост & Вес</div><span class="card-badge badge-blue">${pg.length} изм.</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">${hHighlight}${wHighlight}</div>${lineC}</div>`;
+  }
+
+  if(pf.length>0){
+    const feedChg=prevAvgFeeds>0?`<div class="stat-change ${parseFloat(avgFeeds)>=parseFloat(prevAvgFeeds)?"change-up":"change-down"}" style="margin-top:4px">${parseFloat(avgFeeds)>=parseFloat(prevAvgFeeds)?"↑":"↓"} vs прошл. ${period==="week"?"неделя":"месяц"}</div>`:"";
+    feedCard=`<div class="card"><div class="card-header"><div class="card-title">🍼 Питание</div><span class="card-badge badge-pink">${pf.length} приём${pf.length!==1?"ов":""}</span></div>
+      <div class="report-highlight"><div class="report-highlight-val">${avgFeeds}</div><div class="report-highlight-label">приёма пищи в день (в среднем)</div>${feedChg}</div>
+      <div class="report-section"><div class="report-section-title">Итого за период</div>
+        ${totalBreast>0?`<div class="report-row"><span class="report-row-label">🤱 Грудное вскарм.</span><span class="report-row-value">${totalBreast} мин</span></div>`:""  }
+        ${totalBottle>0?`<div class="report-row"><span class="report-row-label">🍼 Смесь / молоко</span><span class="report-row-value">${totalBottle} мл</span></div>`:""}
+        ${totalFood>0?`<div class="report-row"><span class="report-row-label">🥣 Твёрдая пища</span><span class="report-row-value">${totalFood} г</span></div>`:""}
+        <div class="report-row"><span class="report-row-label">Всего приёмов</span><span class="report-row-value">${pf.length}</span></div>
+        <div class="report-row"><span class="report-row-label">Среднее в день</span><span class="report-row-value">${avgFeeds} приёма</span></div>
+      </div></div>`;
+  }
+
+  if(ps.length>0){
+    const slpChg=prevAvgSleepH>0?`<div class="stat-change ${parseFloat(avgSleepH)>=parseFloat(prevAvgSleepH)?"change-up":"change-down"}" style="margin-top:4px">${parseFloat(avgSleepH)>=parseFloat(prevAvgSleepH)?"↑":"↓"} vs прошл. ${period==="week"?"неделя":"месяц"}</div>`:"";
+    sleepCard=`<div class="card"><div class="card-header"><div class="card-title">🌙 Сон</div><span class="card-badge badge-indigo">${ps.length} запис${ps.length!==1?"ей":"ь"}</span></div>
+      <div class="report-highlight" style="background:linear-gradient(135deg,#e8eaf6,#c5cae9)"><div class="report-highlight-val">${avgSleepH} ч</div><div class="report-highlight-label">среднее сна в сутки</div>${slpChg}</div>
+      <div class="report-section"><div class="report-section-title">Разбивка</div>
+        <div class="report-row"><span class="report-row-label">🌙 Ночной сон</span><span class="report-row-value">${fmtDuration(nightMins)}</span></div>
+        <div class="report-row"><span class="report-row-label">☀️ Дневной сон</span><span class="report-row-value">${fmtDuration(dayMins)}</span></div>
+        <div class="report-row"><span class="report-row-label">Всего за период</span><span class="report-row-value">${fmtDuration(totalSleepMins)}</span></div>
+        <div class="report-row"><span class="report-row-label">Количество сеансов</span><span class="report-row-value">${ps.length}</span></div>
+      </div></div>`;
+  }
+
+  if(prevGrowth.length>0||prevFeeding.length>0||prevSleep.length>0){
+    let rows="";
+    if(prevGrowth.length&&pg.length){
+      const pLast=prevGrowth[prevGrowth.length-1],cLast=pg[pg.length-1];
+      if(pLast.height&&cLast.height)rows+=`<div class="report-row"><span class="report-row-label">Рост</span><span class="report-row-value">${pLast.height} → ${cLast.height} см</span></div>`;
+      if(pLast.weight&&cLast.weight)rows+=`<div class="report-row"><span class="report-row-label">Вес</span><span class="report-row-value">${pLast.weight} → ${cLast.weight} кг</span></div>`;
+    }
+    if(prevFeeding.length>0&&pf.length>0)rows+=`<div class="report-row"><span class="report-row-label">Приёмов пищи</span><span class="report-row-value">${prevFeeding.length} → ${pf.length}</span></div>`;
+    if(prevSleep.length>0&&ps.length>0)rows+=`<div class="report-row"><span class="report-row-label">Сон (всего)</span><span class="report-row-value">${fmtDuration(prevSleepMins)} → ${fmtDuration(totalSleepMins)}</span></div>`;
+    if(rows)compCard=`<div class="card"><div class="card-header"><div class="card-title">📈 Сравнение</div><span class="card-badge badge-peach">vs прошл. ${period==="week"?"неделя":"месяц"}</span></div>
+      <div class="report-section">${rows}</div></div>`;
+  }
+
+  const emptyCard=!hasData?`<div class="card"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Пока нет данных за этот период</div></div></div>`:"";
+
+  return`
+    <div class="report-header"><h2>Отчёт</h2><p>${period==="week"?formatDate(periodStart)+" — "+formatDate(now):now.toLocaleDateString("ru-RU",{month:"long",year:"numeric"})}</p></div>
+    <div class="report-toggle">
+      <button class="report-toggle-btn ${period==="week"?"active":""}" onclick="switchReport('week')">Неделя</button>
+      <button class="report-toggle-btn ${period==="month"?"active":""}" onclick="switchReport('month')">Месяц</button>
+    </div>
+    ${emptyCard}${growthCard}${feedCard}${sleepCard}${compCard}`;
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────
+function renderModal(){
+  if(!state.modal)return"";
+  switch(state.modal){
+    case"addChild":return renderChildModal(null);
+    case"editChild":return renderChildModal(state.editingChild);
+    case"childList":return renderChildListModal();
+    case"growth":return renderGrowthModal();
+    case"feeding":return renderFeedingModal();
+    case"sleep":return renderSleepModal();
+  }
+  return"";
+}
+
+function renderChildModal(child){
+  const isEdit=!!child;
+  const name=child?.name||"";
+  const dob=child?.dob||"";
+  const color=child?.color||CHILD_COLORS[0];
+  const emoji=child?.emoji||CHILD_EMOJIS[0];
+  return`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">${isEdit?"Редактировать":"Добавить ребёнка"}</div>
+    <div id="child-modal-body">
+      <div class="input-wrap" style="margin-bottom:14px"><label class="input-label">Имя</label><input class="input-field" id="cm-name" value="${name}" placeholder="Имя малыша"/></div>
+      <div class="input-wrap" style="margin-bottom:14px"><label class="input-label">Дата рождения</label><input class="input-field" type="date" id="cm-dob" value="${dob}"/></div>
+      <div style="margin-bottom:14px"><label class="input-label">Аватар</label><div class="emoji-row">${CHILD_EMOJIS.map(e=>`<button class="emoji-btn ${emoji===e?"active":""}" onclick="cmEmoji('${e}')">${e}</button>`).join("")}</div></div>
+      <div><label class="input-label">Цвет</label><div class="color-row">${CHILD_COLORS.map(c=>`<div class="color-swatch ${color===c?"active":""}" style="background:${c}" onclick="cmColor('${c}')"></div>`).join("")}</div></div>
+      <button class="btn-save" onclick="cmSave(${isEdit?`'${child.id}'`:""})">
+        ${isEdit?"Сохранить":"Добавить ребёнка"}</button>
+      ${isEdit?`<button class="btn-danger" onclick="cmConfirmDel('${child.id}')">🗑 Удалить ребёнка</button>`:""}
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+    </div>
+  </div></div>`;
+}
+let cmCurrentEmoji=null,cmCurrentColor=null;
+function cmEmoji(e){cmCurrentEmoji=e;document.querySelectorAll("#child-modal-body .emoji-btn").forEach(b=>b.classList.toggle("active",b.textContent===e));}
+function cmColor(c){cmCurrentColor=c;document.querySelectorAll("#child-modal-body .color-swatch").forEach(s=>s.classList.toggle("active",s.style.background===c));}
+function cmSave(id){
+  const name=document.getElementById("cm-name").value.trim();
+  if(!name)return;
+  const dob=document.getElementById("cm-dob").value;
+  const emoji=cmCurrentEmoji||document.querySelector("#child-modal-body .emoji-btn.active")?.textContent||CHILD_EMOJIS[0];
+  const color=cmCurrentColor||CHILD_COLORS[0];
+  // find active color from swatches
+  const activeSwatch=document.querySelector("#child-modal-body .color-swatch.active");
+  const finalColor=cmCurrentColor||(activeSwatch?activeSwatch.style.background:CHILD_COLORS[0]);
+  if(id){updateChild({id,name,dob,color:finalColor,emoji});}else{addChild({name,dob,color:finalColor,emoji});}
+  cmCurrentEmoji=null;cmCurrentColor=null;
+}
+function cmConfirmDel(id){
+  document.getElementById("child-modal-body").innerHTML=`
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:15px;color:var(--text-primary);font-weight:600;margin-bottom:6px">Удалить ребёнка?</div>
+      <div style="font-size:13px;color:var(--text-secondary)">Все данные будут удалены навсегда</div>
+    </div>
+    <button class="btn-save" style="background:linear-gradient(135deg,#ef5350,#e53935);box-shadow:0 4px 14px rgba(229,57,53,.3)" onclick="deleteChild('${id}')">Да, удалить</button>
+    <button class="btn-cancel" onclick="closeModal()">Отмена</button>`;
+}
+
+function renderChildListModal(){
+  const active=state.activeId;
+  return`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div><div class="modal-title">Дети</div>
+    ${state.children.map(c=>`<div class="children-list-item">
+      <div class="child-list-avatar" style="background:${c.color}">${c.emoji}</div>
+      <div class="child-list-info">
+        <div class="child-list-name">${c.name}${c.id===active?`<span class="active-badge">активен</span>`:""}</div>
+        <div class="child-list-age">${c.dob?calcAge(c.dob):"Дата не указана"}</div>
+      </div>
+      <div class="child-list-actions">
+        ${c.id!==active?`<button class="child-action-btn" onclick="switchChild('${c.id}');closeModal()">👁</button>`:""}
+        <button class="child-action-btn" onclick="openEditModalFor('${c.id}')">✏️</button>
+        <button class="child-action-btn" onclick="deleteChild('${c.id}')">🗑</button>
+      </div>
+    </div>`).join("")}
+    <button class="btn-save" style="margin-top:20px" onclick="closeModal();setTimeout(()=>openModal('addChild'),60)">+ Добавить ребёнка</button>
+    <button class="btn-cancel" onclick="closeModal()">Закрыть</button>
+  </div></div>`;
+}
+
+function renderGrowthModal(){
+  return`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div><div class="modal-title">Добавить измерение</div>
+    <div class="modal-row">
+      <div class="input-wrap"><label class="input-label">Рост (см)</label><input class="input-field" type="number" id="gm-h" placeholder="60"/></div>
+      <div class="input-wrap"><label class="input-label">Вес (кг)</label><input class="input-field" type="number" step="0.1" id="gm-w" placeholder="3.5"/></div>
+    </div>
+    <button class="btn-save" onclick="submitGrowth()">Сохранить измерение</button>
+    <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+  </div></div>`;
+}
+function submitGrowth(){
+  const h=document.getElementById("gm-h").value;
+  const w=document.getElementById("gm-w").value;
+  if(h||w)addGrowth({height:h?parseFloat(h):null,weight:w?parseFloat(w):null});
+}
+
+function renderFeedingModal(){
+  return`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div><div class="modal-title">Добавить приём пищи</div>
+    <div class="type-toggle">
+      <button class="type-btn active" id="ft-breast" onclick="fmType('breast')"><div class="t-icon">🤱</div>Грудь</button>
+      <button class="type-btn" id="ft-bottle" onclick="fmType('bottle')"><div class="t-icon">🍼</div>Бутылочка</button>
+      <button class="type-btn" id="ft-food" onclick="fmType('food')"><div class="t-icon">🥣</div>Еда</button>
+    </div>
+    <div class="input-wrap"><label class="input-label" id="fm-label">Количество (минуты)</label><input class="input-field" type="number" id="fm-amount" placeholder="15"/></div>
+    <button class="btn-save" onclick="submitFeeding()">Сохранить приём пищи</button>
+    <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+  </div></div>`;
+}
+let fmCurrentType="breast";
+function fmType(t){
+  fmCurrentType=t;
+  ["breast","bottle","food"].forEach(k=>{
+    const btn=document.getElementById("ft-"+k);
+    btn.classList.toggle("active",k===t);
+    btn.style.border=k===t?"2px solid var(--accent-pink)":"2px solid var(--border)";
+    btn.style.background=k===t?"#fce4ec":"#faf8fc";
+  });
+  const labels={breast:"Количество (минуты)",bottle:"Количество (мл)",food:"Количество (грамм)"};
+  const placeholders={breast:"15",bottle:"120",food:"80"};
+  document.getElementById("fm-label").textContent=labels[t];
+  document.getElementById("fm-amount").placeholder=placeholders[t];
+}
+function submitFeeding(){
+  const amt=document.getElementById("fm-amount").value;
+  if(amt)addFeeding({type:fmCurrentType,amount:parseFloat(amt)});
+  fmCurrentType="breast";
+}
+
+function renderSleepModal(){
+  const def=nowLocal();
+  return`<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div><div class="modal-title">Добавить сон</div>
+    <div class="type-toggle">
+      <button class="type-btn active" id="sm-night" style="border-color:var(--accent-indigo);background:#e8eaf6" onclick="smType('night')"><div class="t-icon">🌙</div>Ночной</button>
+      <button class="type-btn" id="sm-day" onclick="smType('day')"><div class="t-icon">☀️</div>Дневной</button>
+    </div>
+    <div class="modal-row">
+      <div class="input-wrap"><label class="input-label">Начало</label><input class="input-field" type="datetime-local" id="sm-start" value="${def}" style="font-size:13px" oninput="smPreview()"/></div>
+      <div class="input-wrap"><label class="input-label">Конец</label><input class="input-field" type="datetime-local" id="sm-end" style="font-size:13px" oninput="smPreview()"/></div>
+    </div>
+    <div id="sm-dur"></div>
+    <button class="btn-save" id="sm-save" style="background:linear-gradient(135deg,#5c6bc0,#7986cb);box-shadow:0 4px 14px rgba(92,107,192,.4)" onclick="submitSleep()">Сохранить сон</button>
+    <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+  </div></div>`;
+}
+let smCurrentType="night";
+function smType(t){
+  smCurrentType=t;
+  const nb=document.getElementById("sm-night"),db=document.getElementById("sm-day");
+  nb.classList.toggle("active",t==="night");
+  db.classList.toggle("active",t==="day");
+  nb.style.border=t==="night"?"2px solid var(--accent-indigo)":"2px solid var(--border)";
+  nb.style.background=t==="night"?"#e8eaf6":"#faf8fc";
+  db.style.border=t==="day"?"2px solid #ffcba4":"2px solid var(--border)";
+  db.style.background=t==="day"?"#fff3e0":"#faf8fc";
+  const sBtn=document.getElementById("sm-save");
+  if(t==="night"){sBtn.style.background="linear-gradient(135deg,#5c6bc0,#7986cb)";sBtn.style.boxShadow="0 4px 14px rgba(92,107,192,.4)";}
+  else{sBtn.style.background="linear-gradient(135deg,var(--accent-pink),var(--accent-lavender))";sBtn.style.boxShadow="0 4px 14px rgba(244,167,185,.4)";}
+  smPreview();
+}
+function smPreview(){
+  const s=document.getElementById("sm-start")?.value;
+  const e=document.getElementById("sm-end")?.value;
+  const durEl=document.getElementById("sm-dur");
+  if(!durEl)return;
+  if(s&&e){
+    const mins=sleepMinutes(new Date(s).toISOString(),new Date(e).toISOString());
+    if(mins>0){durEl.innerHTML=`<div class="dur-preview" style="background:${smCurrentType==="night"?"#eef0ff":"#fff8f0"}">Длительность: <strong style="color:${smCurrentType==="night"?"var(--accent-indigo)":"#e65100"}">${fmtDuration(mins)}</strong></div>`;}
+    else{durEl.innerHTML="";}
+  }else{durEl.innerHTML="";}
+}
+function submitSleep(){
+  const s=document.getElementById("sm-start").value;
+  const e=document.getElementById("sm-end").value;
+  if(!s||!e)return;
+  const startISO=new Date(s).toISOString();
+  const endISO=new Date(e).toISOString();
+  const mins=sleepMinutes(startISO,endISO);
+  if(mins>0)addSleep({type:smCurrentType,start:startISO,end:endISO});
+  smCurrentType="night";
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────
+function switchTab(t){state.tab=t;render();}
+function switchChild(id){state.activeId=id;save(SK.ACTIVE,id);render();}
+function openModal(m){state.modal=m;render();}
+function closeModal(){state.modal=null;state.editingChild=null;cmCurrentEmoji=null;cmCurrentColor=null;render();}
+function openEditModal(){const active=state.children.find(c=>c.id===state.activeId);if(active){state.editingChild=active;state.modal="editChild";render();}}
+function openEditModalFor(id){const c=state.children.find(ch=>ch.id===id);if(c){state.editingChild=c;state.modal="editChild";render();}}
+function switchReport(p){state.reportPeriod=p;render();}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+try{
+  debugLog("BabyTrack starting initApp...");
+  initApp();
+  debugLog("BabyTrack initialized successfully!");
+}catch(e){
+  debugLog("FATAL ERROR: "+e.message);
+  console.error("Init error:",e);
+  document.getElementById("root").innerHTML=`<div style="padding:40px 20px;text-align:center;color:#e53935">
+    <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
+    <div style="font-size:14px;color:#666;margin-bottom:20px">${e.message||"Неизвестная ошибка"}</div>
+    <button onclick="localStorage.clear();location.reload()" style="padding:12px 24px;background:#e53935;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700">Очистить данные и перезапустить</button>
+  </div>`;
+}
+</script>
+</body>
+</html>
